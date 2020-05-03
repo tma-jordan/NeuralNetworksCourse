@@ -2,6 +2,7 @@ import data_loader_two_by_two as dat
 import nn_framework.activation as activation
 import nn_framework.framework as framework
 import nn_framework.layer as layer
+import nn_framework.error_fun as error_fun
 
 N_NODES = [7, 4, 6]
 
@@ -29,6 +30,7 @@ for i_layer in range(len(n_nodes) - 1):
 #Run the autoencoder
 autoencoder = framework.ANN(
     model=model,
+    error_fun=error_fun.sqr,
     expected_range=input_value_range,
 )
 autoencoder.train(training_set)
