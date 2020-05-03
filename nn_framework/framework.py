@@ -21,7 +21,7 @@ class ANN(object):
         expected_range=(-1, 1),
     ):
         self.layers = model
-
+        self.error_fun = error_fun
         self.error_history = []                           #List to capture error history
         self.n_iter_train = int(1e8)                      #Number of iterations in training set
         self.n_iter_evaluate = int(1e6)                   #Number of iterations in evaluation set
@@ -62,8 +62,6 @@ class ANN(object):
             y = self.forward_prop(x)
             #Calculate model error - how does x and y work?
             error = self.error_fun.calc(x, y)
-            #Calculate change in error with respect to the output
-            error_d = self.error_fun.calc_d(x, y)
             #Add error record to error_history list
             self.error_history.append((np.mean(error**2))**.5)
 
