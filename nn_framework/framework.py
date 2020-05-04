@@ -18,6 +18,7 @@ class ANN(object):
         self,
         model=None,
         error_fun=None,
+        printer=None,
         expected_range=(-1, 1),
     ):
         self.layers = model
@@ -29,6 +30,7 @@ class ANN(object):
         self.reporting_bin_size = int(1e3)                #Run this number of times and average to spot trends
         self.report_min = -3                              #Minimum amount the report focuses on - so the graph focuses on the right area
         self.report_max = 0                               #Maximum amount the report focuses on - so the graph focuses on the right area
+        self.printer = printer
         self.expected_range = expected_range
 
         self.reports_path = "reports"                     #File settings to save visualisation
@@ -54,6 +56,7 @@ class ANN(object):
             if (i_iter + 1) % self.viz_interval == 0:
                 #...run report() function
                 self.report()
+                self.printer.render(self, x, f"train_{i_iter + 1:08d}")
 
 
     def evaluate(self, evaluation_set):
@@ -69,6 +72,7 @@ class ANN(object):
             if (i_iter + 1) % self.viz_interval == 0:
                 #...run report() function
                 self.report()
+                self.printer.render(self, x, f"eval_{i_iter + 1:08d}")
 
 
     def forward_prop(self, x):

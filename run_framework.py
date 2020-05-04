@@ -3,6 +3,7 @@ import nn_framework.activation as activation
 import nn_framework.framework as framework
 import nn_framework.layer as layer
 import nn_framework.error_fun as error_fun
+from autoencoder_viz import Printer
 
 N_NODES = [7, 4, 6]
 
@@ -11,7 +12,7 @@ training_set, evaluation_set = dat.get_data_sets()
 sample = next(training_set())
 input_value_range = (0, 1)
 n_pixels = sample.shape[0] * sample.shape[1]
-
+printer = Printer(input_shape=sample.shape)
 
 #n_nodes acts as a list or vector of each of the layers of nodes. [n_pixels] is the input layer which contains the total number of pixels from the image data we import, then
 #N_NODES sets the number of nodes in the hidden layer, currently set to 5. The output layer is currently also set to contain [n_pixels]
@@ -31,6 +32,7 @@ for i_layer in range(len(n_nodes) - 1):
 autoencoder = framework.ANN(
     model=model,
     error_fun=error_fun.abs,
+    printer=printer,
     expected_range=input_value_range,
 )
 autoencoder.train(training_set)
