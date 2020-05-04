@@ -35,3 +35,17 @@ class Dense(object):
         self.x = np.concatenate((inputs, bias), axis=1)
         self.y = self.x @ self.weights
         return self.y
+
+    def back_prop(self, de_dy):
+        """
+        Propagate the outputs back through the layer.
+        """
+        #Find the derivative of the output y with respect to the linear output in the node v
+        #v is the output from input vector x multiplied by the weights vector, before it goes
+        #through the activation function. So v is like an intermediate output wrt the acitvation
+        #function. Hence, the derivative here is the derivative of the activation function, calc(d)
+        dy_dv = self.activate.calc_d(self.y)
+        #Self.weights.transpose() = dy/dx
+        de_dx = (de_dy * dy_dv) @ self.weights.transpose()
+        #Return derivatives at all layer expect the bias layer (the -1 excludes this)
+        return de_dx[:, :-1]

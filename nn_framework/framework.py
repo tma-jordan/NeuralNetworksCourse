@@ -51,6 +51,9 @@ class ANN(object):
             error_d = self.error_fun.calc_d(x, y)
             #Add error record to error_history list
             self.error_history.append((np.mean(error**2))**.5)
+            #Run backpropagation, inputting the the slope of the error function so we
+            #move down the gradient and to a minimum
+            self.back_prop(error_d)
 
             #When we reach an iteration that corresponds with a reporting individual (i.e. remainder is 0)
             if (i_iter + 1) % self.viz_interval == 0:
@@ -83,6 +86,15 @@ class ANN(object):
             y = layer.forward_prop(y)
         #The final output vector is returned once all layers are worked through. np.ravel() turns this into a one dimensional array
         return y.ravel()
+
+    #backpropagation method
+    def back_prop(self, de_dy):
+        #For each  i, where i is an object belonging to the class layer
+        #And where we work backwards from the last layer to the first layer  
+        for i_layer, layer in enumerate(self.layers[::-1]):
+            de_dx = layer.back_prop(de_dy)
+            de_dy = de_dx
+
 
     #Run forward propagation from one layer to a set layer within the model
     def forward_prop_to_layer(self, x, i_layer):
