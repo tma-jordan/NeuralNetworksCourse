@@ -6,11 +6,14 @@ class Dense(object):
         self,
         m_inputs,
         n_outputs,
+        activate,
         debug=False,
     ):
         self.debug = debug
         self.m_inputs = int(m_inputs)
         self.n_outputs = int(n_outputs)
+        self.activate = activate
+
         self.learning_rate = .05
 
         # Choose random weights.
@@ -33,7 +36,8 @@ class Dense(object):
         """
         bias = np.ones((1, 1))
         self.x = np.concatenate((inputs, bias), axis=1)
-        self.y = self.x @ self.weights
+        v = self.x @ self.weights
+        self.y = self.activate.calc(v)
         return self.y
 
     def back_prop(self, de_dy):
@@ -45,7 +49,7 @@ class Dense(object):
         #through the activation function. So v is like an intermediate output wrt the acitvation
         #function. Hence, the derivative here is the derivative of the activation function, calc(d)
         dy_dv = self.activate.calc_d(self.y)
-        #Self.weights.transpose() = dy/dx
+        #Self.weights.transpose() = dy/dx - use the chain rule to find de_dx from de_dy, dy_dv and dv_dx 
         de_dx = (de_dy * dy_dv) @ self.weights.transpose()
         #Return derivatives at all layer expect the bias layer (the -1 excludes this)
         return de_dx[:, :-1]
