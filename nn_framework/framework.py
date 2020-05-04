@@ -84,6 +84,19 @@ class ANN(object):
         #The final output vector is returned once all layers are worked through. np.ravel() turns this into a one dimensional array
         return y.ravel()
 
+    #Run forward propagation from one layer to a set layer within the model
+    def forward_prop_to_layer(self, x, i_layer):
+        y = x.ravel()[np.newaxis, :]
+        for layer in self.layers[:i_layer]:
+            y = layer.forward_prop(y)
+        return y.ravel()
+
+    #Run forward propagation a set layer within the model to the output layer
+    def forward_prop_from_layer(self, x, i_layer):
+        y = x.ravel()[np.newaxis, :]
+        for layer in self.layers[i_layer:]:
+            y = layer.forward_prop(y)
+        return y.ravel()
 
     def normalize(self, values):
         """
