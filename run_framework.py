@@ -30,7 +30,7 @@ for i_layer in range(len(n_nodes) - 1):
 #Run the autoencoder
 autoencoder = framework.ANN(
     model=model,
-    error_fun=error_fun.sqr,
+    error_fun=error_fun.abs,
     expected_range=input_value_range,
 )
 autoencoder.train(training_set)

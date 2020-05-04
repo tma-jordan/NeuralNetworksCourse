@@ -14,3 +14,15 @@ class sqr(object):
     @staticmethod
     def calc_d(x, y):
         return 2 * (y - x)
+
+
+class abs(object):
+    @staticmethod
+    #Absolute value of the difference between the real and trained data
+    def calc(x, y):
+        return np.abs(y - x)
+
+    #The slope is +1 or -1 depending on the direction needed to reduce the error
+    @staticmethod
+    def calc_d(x, y):
+        return np.sign(y - x)
