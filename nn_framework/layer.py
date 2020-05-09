@@ -45,11 +45,23 @@ class Dense(object):
         Propagate the outputs back through the layer.
         """
         #Find the derivative of the output y with respect to the linear output in the node v
-        #v is the output from input vector x multiplied by the weights vector, before it goes
+        #v is the linear output from input vector x multiplied by the weights vector, before it goes
         #through the activation function. So v is like an intermediate output wrt the acitvation
         #function. Hence, the derivative here is the derivative of the activation function, calc(d)
         dy_dv = self.activate.calc_d(self.y)
-        #Self.weights.transpose() = dy/dx - use the chain rule to find de_dx from de_dy, dy_dv and dv_dx 
+        #v = self.x @ self.weights - the inputs (matrix) multiplied by the weights - the derivative of v with
+        #respect to one of these components is the other
+        #dv_dw = self.x
+        #dv_dx = self.weights
+
+        #Sensitity of the output y with respect to weights - dy_dw = dv_dw * dy_dv - transpose is so the matrices can
+        #multipy with m x n and n x p rule
+        dy_dw = self.x.transpose() @ dy_dv
+        #Sensitivity of error with respect to weights, use to change weights and move down the loss function
+        de_dw = de_dy * dy_dw
+        self.weights -= de_dw * self.learning_rate
+
+        #Self.weights.transpose() = dy/dx - use the chain rule to find de_dx from de_dy, dy_dv and dv_dx
         de_dx = (de_dy * dy_dv) @ self.weights.transpose()
         #Return derivatives at all layer expect the bias layer (the -1 excludes this)
         return de_dx[:, :-1]
