@@ -30,6 +30,11 @@ class Dense(object):
         self.x = np.zeros((1, self.m_inputs + 1))
         self.y = np.zeros((1, self.n_outputs))
 
+        self.regularizers = []
+
+    #Method to add a specified regularizer to the layer
+    def add_regularizer(self, new_regularizer):
+        self.regularizers.append(new_regularizer)
 
     def forward_prop(self, inputs):
         """
@@ -68,6 +73,12 @@ class Dense(object):
         #Sensitivity of error with respect to weights, use to change weights and move down the loss function
         de_dw = de_dy * dy_dw
         self.weights -= de_dw * self.learning_rate
+
+        #Add in regularization at this layer
+        #For each regulizer in the layer's list of regularizers
+        for regulizer in self.regularizers:
+            #Regulate the weights and prevent these moving too far so as to avoid overfitting i.e. the issue where the model fits predicitons to 'noise' as well as the signal.
+            self.weights = regulizer.update(self)
 
         #Self.weights.transpose() = dy/dx - use the chain rule to find de_dx from de_dy, dy_dv and dv_dx
         de_dx = (de_dy * dy_dv) @ self.weights.transpose()

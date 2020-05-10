@@ -42,16 +42,19 @@ class ANN(object):
             pass                                          #If the reports directory isn't created, move on
 
     def train(self, training_set):
+        #For each iteration
         for i_iter in range(self.n_iter_train):
+            #The input is taken as the next in line from the training set and turned into a 1-dimensional vector
             x = self.normalize(next(training_set()).ravel())
+            #The model uses forward propagation to estimate the output y given the input x
             y = self.forward_prop(x)
-            #Calculate model error - how does x and y work?
+            #Calculate model error - the difference between the estimate y and the actual data, which is the same as the input
             error = self.error_fun.calc(x, y)
-            #Calculate change in error with respect to the output
+            #Calculate the slope of error function or loss curve
             error_d = self.error_fun.calc_d(x, y)
             #Add error record to error_history list
             self.error_history.append((np.mean(error**2))**.5)
-            #Run backpropagation, inputting the the slope of the error function so we
+            #Run backpropagation to improve the model accuracy, inputting the the slope of the error function so we
             #move down the gradient and to a minimum
             self.back_prop(error_d)
 
@@ -90,7 +93,7 @@ class ANN(object):
     #backpropagation method
     def back_prop(self, de_dy):
         #For each  i, where i is an object belonging to the class layer
-        #And where we work backwards from the last layer to the first layer  
+        #And where we work backwards from the last layer to the first layer
         for i_layer, layer in enumerate(self.layers[::-1]):
             de_dx = layer.back_prop(de_dy)
             de_dy = de_dx
