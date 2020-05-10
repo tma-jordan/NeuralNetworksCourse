@@ -5,8 +5,10 @@ import nn_framework.layer as layer
 import nn_framework.error_fun as error_fun
 from autoencoder_viz import Printer
 
+#Set up the hidden layers as a list. Each entry is a layer and the valueof the entry is the number of nodes in the list
 N_NODES = [9]
 
+#Retrieve the training and evaluation datasets from the data_loader script
 training_set, evaluation_set = dat.get_data_sets()
 
 sample = next(training_set())
@@ -29,6 +31,8 @@ for i_layer in range(len(n_nodes) - 1):
     ))
 
 #Run the autoencoder
+#Initialise the ANN class with the model in terms of nodes, layers and activation function; the loss function; and the range for normalising the inputs
+#Also, set up the printer function so we can visualse the Neural Network as it computes
 autoencoder = framework.ANN(
     model=model,
     error_fun=error_fun.abs,
@@ -36,3 +40,4 @@ autoencoder = framework.ANN(
     expected_range=input_value_range,
 )
 autoencoder.train(training_set)
+autoencoder.evaluate(evaluation_set)

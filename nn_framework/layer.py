@@ -14,13 +14,16 @@ class Dense(object):
         self.n_outputs = int(n_outputs)
         self.activate = activate
 
-        self.learning_rate = .05
+        #The learning rate is a hyperparameter we can adjust in the model. It sets the rate or 'jumps' at which the model
+        #decreases the size of the error or 'loss function' at each iteration. Too big and the model will jump erratically, too small and the model will take longer to converge on a minimum
+        self.learning_rate = .001
 
         # Choose random weights.
         # Inputs match to rows. Outputs match to columns.
         # Add one to m_inputs to account for the bias term.
         # self.initial_weight_scale = 1 / self.m_inputs
         self.initial_weight_scale = 1
+        #Randomise the weights as a start point for the model to work from  these will likely be inaccurate
         self.weights = self.initial_weight_scale * (np.random.sample(
             size=(self.m_inputs + 1, self.n_outputs)) * 2  - 1)
         self.w_grad = np.zeros((self.m_inputs + 1, self.n_outputs))
@@ -34,10 +37,15 @@ class Dense(object):
         inputs: 2D array
             One column array of input values.
         """
+        #Set the bias term - the b0 or 'intercept of the model' which is a vector of ones (??)
         bias = np.ones((1, 1))
+        #Create the full set of model inputs by combining the inputs x with the bias (Axis=1 ??)
         self.x = np.concatenate((inputs, bias), axis=1)
+        #Find the linear output v by matrix multiplying the inputs by the weights
         v = self.x @ self.weights
+        #Apply the activation function to the linear output v to make the nonlinear output y
         self.y = self.activate.calc(v)
+        #Return y as the ouptput for the model, and endpoint of the forward propagation
         return self.y
 
     def back_prop(self, de_dy):
