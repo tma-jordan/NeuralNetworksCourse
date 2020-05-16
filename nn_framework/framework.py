@@ -24,8 +24,8 @@ class ANN(object):
         self.layers = model
         self.error_fun = error_fun
         self.error_history = []                           #List to capture error history
-        self.n_iter_train = int(1e8)                      #Number of iterations in training set
-        self.n_iter_evaluate = int(1e6)                   #Number of iterations in evaluation set
+        self.n_iter_train = int(8e5)                      #Number of iterations in training set
+        self.n_iter_evaluate = int(2e5)                   #Number of iterations in evaluation set
         self.viz_interval = int(1e5)                      #Number of iterations at which the error visualisation updates each time
         self.reporting_bin_size = int(1e3)                #Run this number of times and average to spot trends
         self.report_min = -3                              #Minimum amount the report focuses on - so the graph focuses on the right area
@@ -68,7 +68,8 @@ class ANN(object):
     def evaluate(self, evaluation_set):
         for i_iter in range(self.n_iter_evaluate):
             x = self.normalize(next(evaluation_set()).ravel())
-            y = self.forward_prop(x)
+            #Run forward propagation - let the method know we are evaluating so the model does not run dropout
+            y = self.forward_prop(x, evaluating=True)
             #Calculate model error - how does x and y work?
             error = self.error_fun.calc(x, y)
             #Add error record to error_history list
@@ -81,12 +82,13 @@ class ANN(object):
                 self.printer.render(self, x, f"eval_{i_iter + 1:08d}")
 
 
-    def forward_prop(self, x):
+    def forward_prop(self, x, evaluating = False):
         # Convert the inputs into a 2D array of the right shape
         y = x.ravel()[np.newaxis, :]
         #Run through each layer as a loop. y is made the output for each layer, which is fed into the next layer.
+        #We also pass forward whether the model is training or evaluating so we can enable (disable) dropout for training (evaluation)
         for layer in self.layers:
-            y = layer.forward_prop(y)
+            y = layer.forward_prop(y, evaluating)
         #The final output vector is returned once all layers are worked through. np.ravel() turns this into a one dimensional array
         return y.ravel()
 

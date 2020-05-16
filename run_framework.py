@@ -23,6 +23,10 @@ printer = Printer(input_shape=sample.shape)
 #n_nodes acts as a list  of each of the layers of nodes. [n_pixels] is the input layer which contains the total number of pixels from the image data we import, then
 #N_NODES sets the number of nodes in the hidden layer, currently set to 5. The output layer also corresponds with the total number and therefore arrangement of pixels
 n_nodes = [n_pixels] + N_NODES + [n_pixels]
+#Set dropout rates for the input layer and all hidden layers. The output layer does not experience dropout
+#Default is 20% of nodes dropped out for input layer and 50% of nodes for hidden layers
+dropout_rates = [.2, .5]
+
 model = []
 #For each layer of nodes in the model
 for i_layer in range(len(n_nodes) - 1):
@@ -32,12 +36,13 @@ for i_layer in range(len(n_nodes) - 1):
         n_nodes[i_layer],
         n_nodes[i_layer + 1],
         activation.tanh,
+        dropout_rate = dropout_rates[i_layer],
     )
     #Add regularizer to the layer - use add_regularizer method to add L1, L2 and custom objects
     #Why run both -  both have pros that work together. L1 frees up nodes that don't do anything for the model and speed up processing. L2 pulls down on really high weights
-    new_layer.add_regularizer(L1())
-    new_layer.add_regularizer(L2())
-    new_layer.add_regularizer(Limit(1.0))
+    #new_layer.add_regularizer(L1())
+    #new_layer.add_regularizer(L2())
+    #new_layer.add_regularizer(Limit(1.0))
     #Append the new layer to the model
     model.append(new_layer)
 
