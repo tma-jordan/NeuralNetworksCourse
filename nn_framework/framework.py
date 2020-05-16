@@ -19,7 +19,6 @@ class ANN(object):
         model=None,
         error_fun=None,
         printer=None,
-        expected_range=(-1, 1),
     ):
         self.layers = model
         self.error_fun = error_fun
@@ -31,7 +30,6 @@ class ANN(object):
         self.report_min = -3                              #Minimum amount the report focuses on - so the graph focuses on the right area
         self.report_max = 0                               #Maximum amount the report focuses on - so the graph focuses on the right area
         self.printer = printer
-        self.expected_range = expected_range
 
         self.reports_path = "reports"                     #File settings to save visualisation
         self.report_name = "performance_history.png"      #File settings to save visualisation
@@ -45,18 +43,18 @@ class ANN(object):
         #For each iteration
         for i_iter in range(self.n_iter_train):
             #The input is taken as the next in line from the training set and turned into a 1-dimensional vector
-            x = self.normalize(next(training_set()).ravel())
+            x = next(training_set()).ravel()
             #The model uses forward propagation to estimate the output y given the input x
-            y = self.forward_prop(x)
-            #Calculate model error - the difference between the estimate y and the actual data, which is the same as the input
-            error = self.error_fun.calc(x, y)
+            y = self.forward_pass(x)
+            #Calculate model error - the difference between the estimate y and the actual data, which is the same as the input - changed??
+            error = self.error_fun.calc(y)
             #Calculate the slope of error function or loss curve
-            error_d = self.error_fun.calc_d(x, y)
+            error_d = self.error_fun.calc_d(y)
             #Add error record to error_history list
-            self.error_history.append((np.mean(error**2))**.5)
+            self.error_history.append(error)
             #Run backpropagation to improve the model accuracy, inputting the the slope of the error function so we
             #move down the gradient and to a minimum
-            self.back_prop(error_d)
+            self.backward_pass(error_d)
 
             #When we reach an iteration that corresponds with a reporting individual (i.e. remainder is 0)
             if (i_iter + 1) % self.viz_interval == 0:
@@ -67,13 +65,13 @@ class ANN(object):
 
     def evaluate(self, evaluation_set):
         for i_iter in range(self.n_iter_evaluate):
-            x = self.normalize(next(evaluation_set()).ravel())
+            x = next(evaluation_set()).ravel()
             #Run forward propagation - let the method know we are evaluating so the model does not run dropout
-            y = self.forward_prop(x, evaluating=True)
+            y = self.forward_pass(x, evaluating=True)
             #Calculate model error - how does x and y work?
-            error = self.error_fun.calc(x, y)
+            error = self.error_fun.calc(y)
             #Add error record to error_history list
-            self.error_history.append((np.mean(error**2))**.5)
+            self.error_history.append(error)
 
             #When we reach an iteration that corresponds with a reporting individual (i.e. remainder is 0)
             if (i_iter + 1) % self.viz_interval == 0:
@@ -81,58 +79,53 @@ class ANN(object):
                 self.report()
                 self.printer.render(self, x, f"eval_{i_iter + 1:08d}")
 
+    #Forward propagation function
+    def forward_pass(
+        self,
+        #Inputs vector
+        x,
+        #Bool to tell us whether we are testing or evaluating the model, some layers may act differently in training
+        evaluating = False,
+        #Which layer to start at - helpful for visualisation
+        i_start_layer = None,
+        #Which layer to stop before - helpful for visualisation
+        i_stop_layer = None
+    ):
 
-    def forward_prop(self, x, evaluating = False):
-        # Convert the inputs into a 2D array of the right shape
-        y = x.ravel()[np.newaxis, :]
+        #Set start and stop layers if no information is provided
+        if i_start_layer is None:
+            i_start_layer = 0
+        if i_stop_layer is None:
+            i_stop_layer = len(self.layers)
+        #Correct for invalid entries in start and stop layer
+        if i_start_layer >= i_stop_layer:
+            return x
+        #We probably also want to do the same if the stop layer is too high or start layer negative ??
+
+        #Reset all the layers to get them ready for the new iteration
+        for layer in self.layers:
+            layer.reset()
+
+        # Convert the inputs into a 2D array of the right shape and increment the inputs of the start layer
+        self.layers[i_start_layer].x += x.ravel()[np.newaxis, :]
+
         #Run through each layer as a loop. y is made the output for each layer, which is fed into the next layer.
         #We also pass forward whether the model is training or evaluating so we can enable (disable) dropout for training (evaluation)
-        for layer in self.layers:
-            y = layer.forward_prop(y, evaluating)
+        for layer in self.layers[i_start_layer: i_stop_layer]:
+            layer.forward_pass(evaluating=evaluating)
+
         #The final output vector is returned once all layers are worked through. np.ravel() turns this into a one dimensional array
-        return y.ravel()
+        return layer.y.ravel()
 
     #backpropagation method
-    def back_prop(self, de_dy):
-        #For each  i, where i is an object belonging to the class layer
+    def backward_pass(self, de_dy):
+        #For each  i, where i is an object belonging to the class layer - ?? changed, can see we pass deivatie through to minimise but a bit unclear
         #And where we work backwards from the last layer to the first layer
-        for i_layer, layer in enumerate(self.layers[::-1]):
-            de_dx = layer.back_prop(de_dy)
-            de_dy = de_dx
+        self.layers[-1].de_dy += de_dy
+        for layer in self.layers[::-1]:
+            layer.backward_pass()
 
-
-    #Run forward propagation from one layer to a set layer within the model
-    def forward_prop_to_layer(self, x, i_layer):
-        y = x.ravel()[np.newaxis, :]
-        for layer in self.layers[:i_layer]:
-            y = layer.forward_prop(y)
-        return y.ravel()
-
-    #Run forward propagation a set layer within the model to the output layer
-    def forward_prop_from_layer(self, x, i_layer):
-        y = x.ravel()[np.newaxis, :]
-        for layer in self.layers[i_layer:]:
-            y = layer.forward_prop(y)
-        return y.ravel()
-
-    def normalize(self, values):
-        """
-        Transform the input/output values so that they tend to
-        fall between -.5 and .5
-        """
-        min_val = self.expected_range[0]
-        max_val = self.expected_range[1]
-        scale_factor = max_val - min_val
-        offset_factor = min_val
-        return (values - offset_factor) / scale_factor - .5
-
-    def denormalize(self, transformed_values):
-        min_val = self.expected_range[0]
-        max_val = self.expected_range[1]
-        scale_factor = max_val - min_val
-        offset_factor = min_val
-        return (transformed_values + .5) * scale_factor + offset_factor
-
+    #Error reporting and visualisation
     def report(self):
         n_bins = int(len(self.error_history) // self.reporting_bin_size)
         smoothed_history = []
